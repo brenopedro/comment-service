@@ -3,41 +3,61 @@ package com.algaworks.comment_service.api.controller;
 import com.algaworks.comment_service.api.model.CommentInput;
 import com.algaworks.comment_service.api.model.CommentOutput;
 import com.algaworks.comment_service.common.IdGenerator;
+import com.algaworks.comment_service.domain.model.Comment;
+import com.algaworks.comment_service.domain.model.CommentId;
+import com.algaworks.comment_service.domain.repository.CommentRepository;
 import io.hypersistence.tsid.TSID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 
 @RestController
 @RequestMapping("/api/comments")
+@RequiredArgsConstructor
 public class CommentController {
+
+    private final CommentRepository commentRepository;
 
     @GetMapping
     public Page<CommentOutput> getComments(Pageable pageable) {
-        return Page.empty();
+        Page<Comment> comments = commentRepository.findAll(pageable);
+        return comments.map(this::toOutput);
     }
 
     @GetMapping("/{id}")
     public CommentOutput getSingleComment(@PathVariable TSID id) {
-        return CommentOutput.builder()
-                .author("TESTE").build();
+        Comment comment = commentRepository.findById(new CommentId(id))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        return toOutput(comment);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CommentOutput createComment(@RequestBody CommentInput comment) {
+    public CommentOutput createComment(@RequestBody CommentInput input) {
+        Comment comment = Comment.builder()
+                .id(new CommentId(IdGenerator.generateId()))
+                .author(input.getAuthor())
+                .text(input.getText())
+                .createdAt(OffsetDateTime.now())
+                .build();
+
+        comment = commentRepository.saveAndFlush(comment);
+
         return toOutput(comment);
     }
 
-    private CommentOutput toOutput(CommentInput comment) {
+    private CommentOutput toOutput(Comment comment) {
         return CommentOutput.builder()
-                .id(IdGenerator.generateId())
+                .id(comment.getId().getValue())
                 .author(comment.getAuthor())
                 .text(comment.getText())
-                .createdAt(OffsetDateTime.now())
+                .createdAt(comment.getCreatedAt())
                 .build();
     }
 }
