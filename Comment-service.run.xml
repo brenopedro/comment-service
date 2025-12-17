@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Comment-service" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.algaworks.comment_service.CommentServiceApplication" />
+    <module name="comment-service.main" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/microsservices/comment-service" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
