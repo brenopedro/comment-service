@@ -1,7 +1,10 @@
 package com.algaworks.comment_service.api.controller;
 
+import com.algaworks.comment_service.api.client.CommentModerationClient;
 import com.algaworks.comment_service.api.model.CommentInput;
 import com.algaworks.comment_service.api.model.CommentOutput;
+import com.algaworks.comment_service.api.model.ModerationInput;
+import com.algaworks.comment_service.api.model.ModerationOutput;
 import com.algaworks.comment_service.common.IdGenerator;
 import com.algaworks.comment_service.domain.model.Comment;
 import com.algaworks.comment_service.domain.model.CommentId;
@@ -22,6 +25,7 @@ import java.time.OffsetDateTime;
 public class CommentController {
 
     private final CommentRepository commentRepository;
+    private final CommentModerationClient commentModerationClient;
 
     @GetMapping
     public Page<CommentOutput> getComments(Pageable pageable) {
@@ -47,9 +51,16 @@ public class CommentController {
                 .createdAt(OffsetDateTime.now())
                 .build();
 
-        comment = commentRepository.saveAndFlush(comment);
+        ModerationOutput moderation = commentModerationClient.moderate(ModerationInput.builder()
+                .commentId(comment.getId().getValue())
+                .text(comment.getText())
+                .build());
 
-        return toOutput(comment);
+        if (!moderation.getApproved()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, moderation.getReason());
+        }
+
+        return toOutput(commentRepository.saveAndFlush(comment));
     }
 
     private CommentOutput toOutput(Comment comment) {
