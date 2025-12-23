@@ -51,10 +51,12 @@ public class CommentController {
                 .createdAt(OffsetDateTime.now())
                 .build();
 
-        ModerationOutput moderation = commentModerationClient.moderate(ModerationInput.builder()
-                .commentId(comment.getId().getValue())
+        ModerationInput build = ModerationInput.builder()
+                .commentId(comment.getId().getValue().toString())
                 .text(comment.getText())
-                .build());
+                .build();
+
+        ModerationOutput moderation = commentModerationClient.moderate(build);
 
         if (!moderation.getApproved()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, moderation.getReason());
