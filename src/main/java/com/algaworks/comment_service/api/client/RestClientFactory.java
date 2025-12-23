@@ -15,10 +15,10 @@ public class RestClientFactory {
         return RestClient.builder()
                 .requestFactory(generateClientHttpRequestFactory())
                 .baseUrl("http://localhost:8081")
-//                .defaultStatusHandler(HttpStatusCode::isError,
-//                        (request, response) -> {
-//                            throw new SensorMonitoringClientBadGatewayException();
-//                        })
+                .defaultStatusHandler(HttpStatusCode::isError,
+                        (request, response) -> {
+                            throw new ModerationClientBadGatewayException();
+                        })
                 .build();
     }
 
